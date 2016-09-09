@@ -4,11 +4,16 @@ using System.Collections;
 public class TempBulletColliderController : MonoBehaviour {
 
 	public GameObject _hitPrefab;
+	public float fireTime;
 	// private bool collided = false;
+
+	void Start() {
+		fireTime = Time.realtimeSinceStartup;
+	}
 
 	// Update is called once per frame
 	void OnCollisionEnter(Collision other) {
-		if (other.gameObject.name.Equals ("Terrain") || other.gameObject.name.Equals ("ClayLauncher") || other.gameObject.name.Equals ("ClayLauncherCylinder")) {
+		if (other.gameObject.name.Equals ("Terrain") || other.gameObject.name.Equals ("ClayLauncher") || other.gameObject.name.Equals ("Cylinder")) {
 				
 
 			foreach (ContactPoint _contactPoint in other.contacts) {

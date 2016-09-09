@@ -5,9 +5,12 @@ using System.Collections;
 public class ClayShooter : MonoBehaviour {
 
 	public GameObject clayPrefab;
+	public GameObject zPrefab;
+	public GameObject walkerPrefab;
 
 	private bool fireClay;
 	private bool fireClayFromRandom;
+	private bool spawnZ;
 
 
 	// Not really a setting, more of a global...
@@ -17,7 +20,13 @@ public class ClayShooter : MonoBehaviour {
 	void Start() {
 		GameObject inGameCanvas = (GameObject)GameObject.FindWithTag ("InGameCanvas");	
 		leadImageCount = inGameCanvas.GetComponentsInChildren<Image> ().Length;
+
+		for (int a = 0; a < 5; a++) {
+			GameObject zombie = (GameObject) Instantiate (walkerPrefab, new Vector3(200, 10, 80+(a*15)), transform.rotation);
+
+		}
 	}
+
 
 	void FixedUpdate () {
 		if (fireClay) {
@@ -46,6 +55,11 @@ public class ClayShooter : MonoBehaviour {
 			Destroy (clay.gameObject, 10f); // destroy clay after 10 seconds
 
 		}
+
+		if (spawnZ) {
+			GameObject zombie = (GameObject) Instantiate (walkerPrefab	, transform.position + new Vector3(0.0f, 0.0f, 15f), transform.rotation);
+			spawnZ = false;
+		}
 	}
 
 
@@ -60,6 +74,10 @@ public class ClayShooter : MonoBehaviour {
 		if (Input.GetKeyUp(KeyCode.Q))
 		{
 			fireClayFromRandom = true;
+		}
+		if (Input.GetKeyUp(KeyCode.Z))
+		{
+			spawnZ = true;
 		}
 		/*
 		if (Input.GetKeyDown(KeyCode.C)) {

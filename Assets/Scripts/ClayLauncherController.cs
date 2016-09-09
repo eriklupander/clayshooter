@@ -4,11 +4,16 @@ using System.Collections;
 public class ClayLauncherController : MonoBehaviour {
 
 	public GameObject clayPrefab;
+	private AudioSource audio;
 
 	private bool fireClayFromRandom;
 	// Use this for initialization
 	void Start () {
-	
+		audio = GetComponent<AudioSource> ();
+	}
+
+	public void FireClayPiegon() {
+		fireClayFromRandom = true;
 	}
 	
 	// Update is called once per frame
@@ -29,7 +34,7 @@ public class ClayLauncherController : MonoBehaviour {
 			Vector3 targetPosition = transform.position + worldTargetOffset;
 
 			Vector3 direction = clay.transform.position - targetPosition; 
-
+			audio.Play ();
 			clay.GetComponent<Rigidbody>().AddForce (-direction.normalized*50f, ForceMode.Impulse);
 			Destroy (clay.gameObject, 10f); // destroy clay after 10 seconds
 

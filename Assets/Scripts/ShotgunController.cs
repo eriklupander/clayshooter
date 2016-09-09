@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using UnityStandardAssets.Characters.FirstPerson;
 
@@ -7,19 +8,34 @@ public class ShotgunController : MonoBehaviour {
 	public GameObject shotgunPrefab;
 	public GameObject bulletPrefab;
 	public GameObject muzzleFlashPrefab;
+	public Text ammoText;
 
 	private GameObject myShotgun;
 
+
+	private Animator animator;
+
 	private bool fire = false;
+	private float nextAllowedFire = -1f;
 	private FirstPersonController fpc;
+	private AudioSource[] audios;
+
+	private static int maxShells = 8;
+	private int shellsLeft = maxShells;
+
+
 
 	// Use this for initialization
 	void Start () {
+		ammoText.text = shellsLeft + " / " + maxShells;
 		fpc = FindObjectOfType<FirstPersonController>();
 
 		myShotgun = (GameObject) Instantiate (shotgunPrefab, transform.position, transform.rotation);
 		myShotgun.transform.parent = transform;
 		myShotgun.transform.localPosition = new Vector3 (0.3f, -0.3f, .8f);
+
+		audios = myShotgun.GetComponents<AudioSource> ();
+		animator = myShotgun.GetComponent<Animator> ();
 
 		// Disable shadow casting for the shotgun since we have no player model that casts shadows.
 		Renderer renderer = (Renderer) myShotgun.GetComponentsInChildren<Renderer> ().GetValue (0);
@@ -33,17 +49,32 @@ public class ShotgunController : MonoBehaviour {
 	private float Stray = .05f;
 
 	void FixedUpdate () {
-		if (fire) {
+		if (fire && Time.realtimeSinceStartup > nextAllowedFire && shellsLeft > 0) {
 			FireShotgun (); 
+		} else if (fire) {
+
+			// Play "click" sound
+			foreach (AudioSource audio in audios) {
+				if (audio.clip.name.Equals ("Missfire_02")) {
+					audio.Play ();
+				}
+			}
+			fire = false;
 		}
+		// print("Normalized time: " + animator.GetAnimatorTransitionInfo (0).normalizedTime);
 	}
 
 	private void FireShotgun ()
 	{
 		bulletPrefab.GetComponentInChildren<Renderer> ().enabled = Settings.tracersEnabled;
-		AudioSource[] audios = myShotgun.GetComponents<AudioSource> ();
+		shellsLeft--;
+		if (shellsLeft == -1)
+			shellsLeft = 0;
+		ammoText.text = shellsLeft + " / " + maxShells;
 		foreach (AudioSource audio in audios) {
-			audio.Play ();
+			if (!audio.clip.name.Equals ("Missfire_02")) {
+				audio.Play ();
+			}
 		}
 		Vector3 basePos = myShotgun.transform.position;
 		basePos += new Vector3 (0f, 0.3f, 0f);
@@ -61,8 +92,8 @@ public class ShotgunController : MonoBehaviour {
 			Destroy (bullet, 3.0f);
 		}
 		renderMuzzleFlash ();
-		Animator animator = myShotgun.GetComponent<Animator> ();
 		animator.SetBool ("Reload", true);
+		nextAllowedFire = Time.realtimeSinceStartup + 0.65f;
 		fire = false;
 	}
 
@@ -95,9 +126,16 @@ public class ShotgunController : MonoBehaviour {
 			Settings settings = FindObjectOfType<Settings>();
 			settings.UpdateSettingsState();
 		}
+		if (Input.GetKeyUp(KeyCode.R))
+		{
+			shellsLeft = maxShells;
+			ammoText.text = shellsLeft + " / " + maxShells;
+			// TODO add reload sound / reload animation.
+		}
 		if (Input.GetKeyUp(KeyCode.Escape)) {
 			OnEscapeKey ();
 		}
+			
 		#endif
 	}
 
@@ -127,5 +165,9 @@ public class ShotgunController : MonoBehaviour {
 			else
 				Debug.Log("No crosshair texture set in the Inspector");
 		}
+	}
+
+	public void AnimFinished() {
+		print ("Anim finished");
 	}
 }

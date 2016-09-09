@@ -17,6 +17,8 @@ public class ClayPrefabCollider : MonoBehaviour {
 	private GameObject inGameCanvas;
 	private Image leadImage;
 
+
+
 	void Start() {
 		if (Settings.easyMode) {
 			inGameCanvas = (GameObject)GameObject.FindWithTag ("InGameCanvas");	
@@ -76,16 +78,17 @@ public class ClayPrefabCollider : MonoBehaviour {
 		}
 	}
 
-
+	private bool collidedWithGround = false;
 
 	void OnCollisionEnter(Collision collision) {
-		//float dist = Vector3.Distance(collision.collider.transform.position, Camera.main.transform.position);
+		
 		// print("Distance to shooter: " + dist);
 		if (collision.collider.CompareTag ("TempBullet")) {
-		//	float timeSinceFire = Time.realtimeSinceStartup - ShotgunController.fireTime;
+			float dist = Vector3.Distance(collision.collider.transform.position, Camera.main.transform.position);
+			float timeSinceFire = Time.realtimeSinceStartup - collision.collider.GetComponent<TempBulletColliderController>().fireTime;
 			// print ("Bullet spent " + timeSinceFire + " seconds in air. That translates to a shell velocity of: " + dist / timeSinceFire);
-
-
+			HitInfo hit = new HitInfo(timeSinceFire, dist, collision.collider.GetComponent<Rigidbody>().velocity.magnitude);
+			CompetitionState.stage.RegisterHit (hit);
 
 			ParticleSystem hitPs = (ParticleSystem)Instantiate (clayHitPartPrefab, transform.position, Quaternion.identity);
 			hitPs.GetComponent<Rigidbody> ().velocity = this.GetComponent<Rigidbody> ().velocity;
@@ -112,6 +115,10 @@ public class ClayPrefabCollider : MonoBehaviour {
 		}
 
 		if (collision.collider.CompareTag ("Ground")) {
+			if (!collidedWithGround) {
+				CompetitionState.stage.RegisterMiss ();
+			}
+			collidedWithGround = true;
 			ParticleSystem ps = (ParticleSystem)Instantiate (prefabPs, transform.position, Quaternion.identity);
 
 			ps.Play ();
@@ -119,6 +126,7 @@ public class ClayPrefabCollider : MonoBehaviour {
 			if (leadImage != null) {
 				leadImage.enabled = false;
 			}
+
 
 		}
 	}
